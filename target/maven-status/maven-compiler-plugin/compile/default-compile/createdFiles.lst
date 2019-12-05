@@ -1,0 +1,5 @@
+com\jcsvall\gestorcontenido\interceptors\AuthInterceptor.class
+com\jcsvall\gestorcontenido\pojos\Login.class
+com\jcsvall\gestorcontenido\interfaces\AuthApiService.class
+com\jcsvall\gestorcontenido\main\App.class
+com\jcsvall\gestorcontenido\auth\AuthApiClient.class

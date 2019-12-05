@@ -1,0 +1,169 @@
+How to install, start and configure the OCSInventory-NG virtual machine
+
+A. Overview
+-----------
+
+The Virtual Machine ocsinventory-ng (or VMOcsinventory-ng) was created to provide an easy and ready-to-use system for those who want to test or run in a production environment the OCS Inventory Next Generation software.
+These machines has been tested mainly in VMWare Server 2.x but they are compatible with other VMWare solutions like VMWare Player or VMWare ESXi.
+Several distributions are available, allowing you to choose the one you prefer :
+
+    Debian 6.0 32 Bits
+    Debian 6.0 64 Bits
+    Ubuntu Server 11.04 LTS 32 Bits
+    Ubuntu Server 11.04 LTS 64 Bits 
+
+Other virtual machines will be available soon, including Fedora and Centos.
+The following services are enabled with OCS Inventory NG 2.0 stable :
+
+    Inventory
+    HTTP and HTTPS Web Administration
+    Ipdiscover
+    SNMP
+    Package deployment 
+
+Note: The SSL mode is also enabled. This allows secure inventory transmission and package deployment. Indeed, a control of the SSL certificate is performed when the agent contacts the server. You can disable this feature but for security reasons, we strongly advise aginst doing this.
+
+B. Requirements
+---------------
+
+You must ensure that you have :
+
+    An installed and operational VMWare solution
+    8 GB hard disk space free
+    The host machine must know how to manage x64 instructions if you choose a 64-bit distribution 
+
+C. Glossary
+-----------
+
+    On Linux, by default, the profile root is associated with the password ocs.
+    On Mysql, by default, the couple ocs/ocs is associated to the ocsweb database. 
+
+D. Installing the Virtual Machine
+---------------------------------
+
+You can retrieve the virtual machine (.tar.gz format) that suits you by going to the Download page.
+
+Once recovered, unzip the archive in the storage folder of your other virtual machines.
+
+In your application, add it in your inventory.
+
+/!\ Warning: At first startup, VMWare detect that your virtual machine does not come from that server and ask if it was moved or copied. Please answer MOVED.
+
+
+Your virtual machine is ready, go setting it in your environment.
+
+D. Configuring the Virtual Machine
+----------------------------------
+
+D.1. Configuring IP
+-------------------
+
+By default, the IP configuration of the virtual machine is :
+
+    IP : 10.10.10.10
+    Subnet mask : 255.255.255.0
+    Gateway : 10.10.10.8
+    DNS : 10.10.200.11 / 10.10.200.2 
+
+To be consistent with your own network, you must edit the following files 
+
+	/etc/network/interfaces : set the right fields :
+        
+		address : enter the IP address of your future OCS server.
+        netmask : enter the subnet mask.
+        network : enter the network address.
+        broadcast : enter the broadcast address.
+        gateway : enter the gateway. 
+
+    /etc/resolv.conf : set the right fields :
+	
+        nameserver : enter the DNS server address. 
+
+    /etc/hosts : change IP address 10.10.10.10 with the one you chose above. 
+
+Note: When finished, restart your virtual machine :
+
+shutdown -r now
+
+D.2. Configuring SAMBA
+----------------------
+
+By default, the SAMBA configuration of the virtual machine inserts it in the workgroup WORKGROUP. If that does not fit into your network settings, please change the WORKGROUP= value by editing the file :
+
+	nano /etc/samba/smb.conf
+
+Then restart SAMBA service :
+
+	service samba restart
+
+D.3. Configuring DNS
+--------------------
+
+To ensure the proper functioning of the inventory and deployment on the agents, the ocsinventory-ng hostname must be resolved by the clients. In other words, the command ping ocsinventory-ng must return a positive result as shown in this image :
+
+To do this, either you use the DNS server on your network to point the name ocsinventory-ng to the IP address of the virtual machine (Howto for Windows Server), or you update the hosts file of each computer with the same information (usually located in %windir%\system32\drivers\etc\).
+
+/!\ Warning: The SSL certificate generated in the virtual machine contains ocsinventory-ng hostname. It is very important that this step is respected as is, with the same name.
+
+D.4. Générating SSL certificate
+-------------------------------
+
+By default, the cacert.pem SSL certificate included in the virtual machine has expired. You must generate a new one.
+
+To do this, in a terminal, type :
+
+	cd /ocs
+	./apache_generate_cert.sh
+
+Answer the questions asked while retaining ocsinventory-ng Common Name.
+
+Once back at the prompt, restart Apache:
+
+	service apache2 restart
+
+The certificate is automatically used by Apache and is available from a client under the address : \\ocsinventory-ng\ocs$.
+
+E. Installing and configuring a client agent
+--------------------------------------------
+
+Installation is the same as described in this documentation. However, let the Server URL field with http://ocsinventory-ng/ocsinventory address.
+
+In addition, you must copy cacert.pem certificate, which is located in \\ocsinventory-ng\ocs$, in C:\ProgramData\OCS Inventory NG\Agent directory ( for Windows Vista/7/Server 2008 ) or in C:\Documents and settings\All Users\Application Data\Ocs Inventory NG\Agent directory ( for Windows 2000/XP/Server 2003 ).
+
+You can also use ocspackage.exe to generate an installer including the certificate. For instructions, see this documentation.
+
+
+F. If you want more ...
+-----------------------
+F.1. Updating time and date
+---------------------------
+
+By default, the virtual machine is configured on the Greenwich time zone. To update this, you can use the package ntpdate :
+
+	apt-get install ntpdate
+
+Then configure it by editing the /etc/default/ntpdate file :
+
+	nano /etc/default/ntpdate
+
+Pass the NTPDATE_USE_NTP_CONF value from YES to NO. Save everything and do update with :
+
+	ntpdate ntp.ubuntu.com
+
+It's Ok ;)
+
+F.2. HTTPS Inventory transmission
+---------------------------------
+
+If you want, you can also sent the inventory over HTTPS. The virtual machine is also configured to perform this operation. To use it, you just during the installation of the agent change the Server URL field with https://ocsinventory-ng/ocsinventory.
+
+
+F.3 Secure your OCS Inventory NG Server
+---------------------------------------
+
+We recommend you to secure you OCS Inventory NG Server. Please follow this link to know how proceed : http://wiki.ocsinventory-ng.org/index.php/Documentation:Secure. 
+
+F.4 Personalize your OCS Inventory Server
+-----------------------------------------
+
+You can personnalize your server with a lot of plugin created by the OCS Inventory Community. Please follow this link to know how proceed : http://wiki.ocsinventory-ng.org/index.php/Plugins:version2.
